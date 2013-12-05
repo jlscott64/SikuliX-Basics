@@ -29,8 +29,9 @@ public class Debug {
 
   private static final int DEFAULT_LEVEL = 1;
   private static int DEBUG_LEVEL = DEFAULT_LEVEL;
-  private long _beginTime;
+  private long _beginTime = 0;
   private String _message;
+  private String _title = null;
   private static PrintStream printout = null;
   private static PrintStream printoutuser = null;
   private static final DateFormat df =
@@ -328,10 +329,17 @@ public class Debug {
    * @param args to use with format string
    */
   public void startTiming(String message, Object... args) {
-    if (!"".equals(message)) {
-      Debug.profile("TStart: " + message, args);
+    int pos;
+    if ((pos = message.indexOf("\t")) < 0) {
+      _title = null;
+      _message = message;
+    } else {
+      _title = message.substring(0, pos);
+      _message = message.replace("\t", " ");
     }
-    _message = message;
+    if (!"".equals(_message)) {
+      profile("TStart: " + _message, args);
+    }
     _beginTime = (new Date()).getTime();
   }
 
@@ -350,9 +358,23 @@ public class Debug {
    * @return the time in msec
    */
   public long endTiming(String message, Object... args) {
+    return endTiming(message, true, args);
+  }
+
+  private long endTiming(String message, boolean isLap, Object... args) {
+    if (_beginTime == 0) {
+      profile("TError: timer not started (%s)", message);
+      return -1;
+    }
     long t = (new Date()).getTime();
     long dt = t - _beginTime;
-    Debug.profile(String.format("TEnd (%.3f sec): ", (float) dt / 1000) + message, args);
+    if (!isLap) {
+      _beginTime = 0;
+    }
+    if (!"".equals(message)) {
+      profile(String.format((isLap ? "TLap:" : "TEnd") + 
+              " (%.3f sec): ", (float) dt / 1000) + message, args);
+    }
     return dt;
   }
 
@@ -362,6 +384,31 @@ public class Debug {
    * @return the time in msec
    */
   public long end() {
-    return endTiming(_message);
+    if (_title == null) {
+      return endTiming(_message, false, new Object[0]);
+    } else {
+      return endTiming(_title, false, new Object[0]);
+    }
+  }
+
+  /**
+   * convenience: lap timer and print standard message
+   *
+   * @return the time in msec
+   */
+  public long lap(String msg) {
+    if (_title == null) {
+      return endTiming("(" + msg + ") " + _message, true, new Object[0]);
+    } else {
+      return endTiming("(" + msg + ") " + _title, true, new Object[0]);
+    }
+  }
+  
+  public static void enter(String msg, Object... args) {
+    profile("entering: " + msg, args);
+  }
+
+  public static void exit(String msg, Object... args) {
+    profile("exiting: " + msg, args);
   }
 }

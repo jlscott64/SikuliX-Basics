@@ -309,7 +309,11 @@ public class RunSetup {
         boolean someUpdate = false;
         if (!popAsk("You have " + Settings.getVersion()
                 + "\nClick YES if you want to run setup again\n"
-                + "or NO to get info on updates/betas.")) {
+                + "This will download fresh versions of the selected stuff.\n"
+                + "Your current stuff will be saved to folder BackUp.\n\n"
+                + "If you cancel the setup or it is not successful\n"
+                + "the saved stuff will be restored from folder BackUp\n\n"
+                + "or click NO to get info on updates or betas.")) {
           splash = showSplash("Checking for update or beta versions! (you have " + version + ")",
                   "please wait - may take some seconds ...");
           AutoUpdater au = new AutoUpdater();
@@ -789,229 +793,191 @@ public class RunSetup {
     };
 
     String[] jarsList = new String[]{null, null, null};
-      String localTemp = "sikuli-temp.jar";
-      String[] localJars = new String[3];
-      String localTestJar = null;
-      if (getIDE
-
-
-        ) {
+    String localTemp = "sikuli-temp.jar";
+    String[] localJars = new String[3];
+    String localTestJar = null;
+    if (getIDE) {
       localJars[0] = localIDE;
-        localTestJar = (new File(workDir, localIDE)).getAbsolutePath();
-      }
-      if (getScript
-
-
-        ) {
+      localTestJar = (new File(workDir, localIDE)).getAbsolutePath();
+    }
+    if (getScript) {
       localJars[1] = localScript;
-        localTestJar = (new File(workDir, localScript)).getAbsolutePath();
-      }
-      if (getJava
-
-
-        ) {
+      localTestJar = (new File(workDir, localScript)).getAbsolutePath();
+    }
+    if (getJava) {
       localJars[2] = localJava;
-      }
-      splash  = showSplash("Now adding native stuff to selected jars.", "please wait - may take some seconds ...");
-      for (String path : localJars
-
-
-        ) {
+    }
+    splash = showSplash("Now adding native stuff to selected jars.", "please wait - may take some seconds ...");
+    for (String path : localJars) {
       if (path == null) {
-          continue;
-        }
-        log1(lvl, "adding native stuff to " + path);
-        localJar = (new File(workDir, path)).getAbsolutePath();
-        jarsList[0] = localJar;
-        jarsList[1] = (new File(workDir, localSetup)).getAbsolutePath();
-        if (!getTess) {
-          jarsList[2] = null;
-        } else {
-          jarsList[2] = (new File(workDir, localTess)).getAbsolutePath();
-        }
-        targetJar = (new File(workDir, localTemp)).getAbsolutePath();
-        success &= FileManager.buildJar(targetJar, jarsList, null, null, libsFilter);
-        success &= (new File(localJar)).delete();
-        success &= (new File(workDir, localTemp)).renameTo(new File(localJar));
+        continue;
       }
-
-      if (Settings.isMac ()
-        && getIDE) {
-      closeSplash(splash);
-        log1(lvl, "preparing Mac app as SikuliX-IDE.app");
-        splash = showSplash("Now preparing Mac app SikuliX-IDE.app.", "please wait - may take some seconds ...");
-        forAllSystems = false;
-        targetJar = (new File(workDir, localMacAppIDE)).getAbsolutePath();
-        jarsList = new String[]{(new File(workDir, localIDE)).getAbsolutePath()};
-        success &= FileManager.buildJar(targetJar, jarsList, null, null, libsFilter);
+      log1(lvl, "adding native stuff to " + path);
+      localJar = (new File(workDir, path)).getAbsolutePath();
+      jarsList[0] = localJar;
+      jarsList[1] = (new File(workDir, localSetup)).getAbsolutePath();
+      if (!getTess) {
+        jarsList[2] = null;
+      } else {
+        jarsList[2] = (new File(workDir, localTess)).getAbsolutePath();
       }
+      targetJar = (new File(workDir, localTemp)).getAbsolutePath();
+      success &= FileManager.buildJar(targetJar, jarsList, null, null, libsFilter);
+      success &= (new File(localJar)).delete();
+      success &= (new File(workDir, localTemp)).renameTo(new File(localJar));
+    }
 
+    if (Settings.isMac()
+            && getIDE) {
       closeSplash(splash);
-      if (success && (getIDE || getScript
+      log1(lvl, "preparing Mac app as SikuliX-IDE.app");
+      splash = showSplash("Now preparing Mac app SikuliX-IDE.app.", "please wait - may take some seconds ...");
+      forAllSystems = false;
+      targetJar = (new File(workDir, localMacAppIDE)).getAbsolutePath();
+      jarsList = new String[]{(new File(workDir, localIDE)).getAbsolutePath()};
+      success &= FileManager.buildJar(targetJar, jarsList, null, null, libsFilter);
+    }
 
-
-        )) {
+    closeSplash(splash);
+    if (success && (getIDE || getScript)) {
       log1(lvl, "exporting commandfiles");
-        splash = showSplash("Now exporting commandfiles.", "please wait - may take some seconds ...");
+      splash = showSplash("Now exporting commandfiles.", "please wait - may take some seconds ...");
 
-        if (Settings.isWindows()) {
-          if (getIDE) {
-            loader.export("Commands/windows#runIDE.cmd", workDir);
-          } else if (getScript) {
-            loader.export("Commands/windows#runScript.cmd", workDir);
-          }
+      if (Settings.isWindows()) {
+        if (getIDE) {
+          loader.export("Commands/windows#runIDE.cmd", workDir);
+        } else if (getScript) {
+          loader.export("Commands/windows#runScript.cmd", workDir);
+        }
 
-        } else if (Settings.isMac()) {
-          if (getIDE) {
-            String fmac = new File(workDir, folderMacAppContent).getAbsolutePath();
-            loader.export("Commands/mac#runIDE", fmac);
-            loader.export("Commands/mac#runIDE", workDir);
-            loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(fmac, "runIDE").getAbsolutePath()});
-            loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runIDE").getAbsolutePath()});
+      } else if (Settings.isMac()) {
+        if (getIDE) {
+          String fmac = new File(workDir, folderMacAppContent).getAbsolutePath();
+          loader.export("Commands/mac#runIDE", fmac);
+          loader.export("Commands/mac#runIDE", workDir);
+          loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(fmac, "runIDE").getAbsolutePath()});
+          loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runIDE").getAbsolutePath()});
 //          FileManager.deleteFileOrFolder(new File(workDir, localIDE).getAbsolutePath());
-            FileManager.deleteFileOrFolder(new File(workDir, localMacApp).getAbsolutePath());
-            localTestJar = new File(fmac, localIDE).getAbsolutePath();
-          } else if (getScript) {
-            loader.export("Commands/mac#runScript", workDir);
-            loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runScript").getAbsolutePath()});
-          }
-
-        } else if (Settings.isLinux()) {
-          if (getIDE) {
-            loader.export("Commands/linux#runIDE", workDir);
-            loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runIDE").getAbsolutePath()});
-            loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, localIDE).getAbsolutePath()});
-          } else if (getScript) {
-            loader.export("Commands/linux#runScript", workDir);
-            loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runScript").getAbsolutePath()});
-          }
+          FileManager.deleteFileOrFolder(new File(workDir, localMacApp).getAbsolutePath());
+          localTestJar = new File(fmac, localIDE).getAbsolutePath();
+        } else if (getScript) {
+          loader.export("Commands/mac#runScript", workDir);
+          loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runScript").getAbsolutePath()});
         }
-        closeSplash(splash);
+
+      } else if (Settings.isLinux()) {
+        if (getIDE) {
+          loader.export("Commands/linux#runIDE", workDir);
+          loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runIDE").getAbsolutePath()});
+          loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, localIDE).getAbsolutePath()});
+        } else if (getScript) {
+          loader.export("Commands/linux#runScript", workDir);
+          loader.doSomethingSpecial("runcmd", new String[]{"chmod", "ugo+x", new File(workDir, "runScript").getAbsolutePath()});
+        }
       }
-      if (!success
-
-
-        ) {
+      closeSplash(splash);
+    }
+    if (!success) {
       popError("Bad things happened trying to add native stuff to selected jars --- terminating!");
-        terminate("Adding stuff to jars did not work");
-      }
-      //</editor-fold>
-
-      //<editor-fold defaultstate="collapsed" desc="option setup: environment setup and test">
-      log1(lvl,
-
-      "trying to set up the environment");
-    splash  = showSplash("Now I will try to set up the environment!", "please wait - may take some seconds ...");
-      File folderLibs = new File(workDir, "libs");
-
-      if (folderLibs.exists ()
-        ) {
-      FileManager.deleteFileOrFolder(folderLibs.getAbsolutePath());
-      }
-
-      folderLibs.mkdirs ();
-
-      loader.check (Settings.SIKULI_LIB);
-
-      if (loader.doSomethingSpecial (
-
-        "checkLibsDir", null)) {
-      closeSplash(splash);
-        splash = showSplash(" ", "Environment seems to be ready!");
-        closeSplash(splash);
-      }
-
-
-        else {
-      closeSplash(splash);
-        popError("Something serious happened! Sikuli not useable!\n"
-                + "Check the error log at " + logfile);
-        terminate("Setting up environment did not work");
-      }
-      if (getJava
-
-
-        ) {
-      log1(lvl, "Trying to run functional test: JAVA-API");
-        splash = showSplash("Trying to run functional test(s)", "Java-API: org.sikuli.script.SikuliX.testSetup()");
-        if (!SikuliX.addToClasspath(localJarJava.getAbsolutePath())) {
-          closeSplash(splash);
-          log0(-1, "Java-API test: ");
-          popError("Something serious happened! Sikuli not useable!\n"
-                  + "Check the error log at " + logfile);
-          terminate("Functional test JAVA-API did not work");
-        }
-        try {
-          log0(lvl, "trying to run org.sikuli.script.SikuliX.testSetup()");
-          Class sysclass = URLClassLoader.class;
-          Class SikuliCL = sysclass.forName("org.sikuli.script.SikuliX");
-          log0(lvl, "class found: " + SikuliCL.toString());
-          Method method = SikuliCL.getDeclaredMethod("testSetup", new Class[0]);
-          log0(lvl, "getMethod: " + method.toString());
-          method.setAccessible(true);
-          closeSplash(splash);
-          log0(lvl, "invoke: " + method.toString());
-          Object ret = method.invoke(null, new Object[0]);
-          if (!(Boolean) ret) {
-            throw new Exception("testSetup returned false");
-          }
-        } catch (Exception ex) {
-          closeSplash(splash);
-          log0(-1, ex.getMessage());
-          popError("Something serious happened! Sikuli not useable!\n"
-                  + "Check the error log at " + logfile);
-          terminate("Functional test JAVA-API did not work");
-        }
-      }
-      if (getIDE || getScript
-
-
-        ) {
-      log1(lvl, "Trying to run functional test: running Jython statements via SikuliScript");
-        splash = showSplash("Trying to run functional test(s)", "running Jython statements via SikuliScript");
-        if (!SikuliX.addToClasspath(localTestJar)) {
-          closeSplash(splash);
-          popError("Something serious happened! Sikuli not useable!\n"
-                  + "Check the error log at " + logfile);
-          terminate("Functional test Jython did not work");
-        }
-        String testSetupSuccess = "Setup: Sikuli seems to work! Have fun!";
-        log0(lvl, "trying to run testSetup.sikuli using SikuliScript");
-        try {
-          String testargs[] = new String[]{"-testSetup", "jython", "popup(\"" + testSetupSuccess + "\")"};
-          closeSplash(splash);
-          SikuliScript.main(testargs);
-          if (null == testargs[0]) {
-            throw new Exception("testSetup ran with problems");
-          }
-        } catch (Exception ex) {
-          closeSplash(splash);
-          log0(-1, ex.getMessage());
-          popError("Something serious happened! Sikuli not useable!\n"
-                  + "Check the error log at " + logfile);
-          terminate("Functional test Jython did not work");
-        }
-      }
-      splash  = showSplash("Setup seems to have ended successfully!", "Detailed information see: " + logfile);
-      start += 2000 ;
-
-      closeSplash(splash);
-
-      log1(lvl,
-
-
-      "... SikuliX Setup seems to have ended successfully ;-)");
+      terminate("Adding stuff to jars did not work");
+    }
     //</editor-fold>
 
-    System.exit (
+    //<editor-fold defaultstate="collapsed" desc="option setup: environment setup and test">
+    log1(lvl,
+            "trying to set up the environment");
+    splash = showSplash("Now I will try to set up the environment!", "please wait - may take some seconds ...");
+    File folderLibs = new File(workDir, "libs");
 
+    if (folderLibs.exists()) {
+      FileManager.deleteFileOrFolder(folderLibs.getAbsolutePath());
+    }
 
-    0);
+    folderLibs.mkdirs();
+
+    loader.check(Settings.SIKULI_LIB);
+
+    if (loader.doSomethingSpecial(
+            "checkLibsDir", null)) {
+      closeSplash(splash);
+      splash = showSplash(" ", "Environment seems to be ready!");
+      closeSplash(splash);
+    } else {
+      closeSplash(splash);
+      popError("Something serious happened! Sikuli not useable!\n"
+              + "Check the error log at " + logfile);
+      terminate("Setting up environment did not work");
+    }
+    if (getJava) {
+      log1(lvl, "Trying to run functional test: JAVA-API");
+      splash = showSplash("Trying to run functional test(s)", "Java-API: org.sikuli.script.SikuliX.testSetup()");
+      if (!SikuliX.addToClasspath(localJarJava.getAbsolutePath())) {
+        closeSplash(splash);
+        log0(-1, "Java-API test: ");
+        popError("Something serious happened! Sikuli not useable!\n"
+                + "Check the error log at " + logfile);
+        terminate("Functional test JAVA-API did not work");
+      }
+      try {
+        log0(lvl, "trying to run org.sikuli.script.SikuliX.testSetup()");
+        Class sysclass = URLClassLoader.class;
+        Class SikuliCL = sysclass.forName("org.sikuli.script.SikuliX");
+        log0(lvl, "class found: " + SikuliCL.toString());
+        Method method = SikuliCL.getDeclaredMethod("testSetup", new Class[0]);
+        log0(lvl, "getMethod: " + method.toString());
+        method.setAccessible(true);
+        closeSplash(splash);
+        log0(lvl, "invoke: " + method.toString());
+        Object ret = method.invoke(null, new Object[0]);
+        if (!(Boolean) ret) {
+          throw new Exception("testSetup returned false");
+        }
+      } catch (Exception ex) {
+        closeSplash(splash);
+        log0(-1, ex.getMessage());
+        popError("Something serious happened! Sikuli not useable!\n"
+                + "Check the error log at " + logfile);
+        terminate("Functional test JAVA-API did not work");
+      }
+    }
+    if (getIDE || getScript) {
+      log1(lvl, "Trying to run functional test: running Jython statements via SikuliScript");
+      splash = showSplash("Trying to run functional test(s)", "running Jython statements via SikuliScript");
+      if (!SikuliX.addToClasspath(localTestJar)) {
+        closeSplash(splash);
+        popError("Something serious happened! Sikuli not useable!\n"
+                + "Check the error log at " + logfile);
+        terminate("Functional test Jython did not work");
+      }
+      String testSetupSuccess = "Setup: Sikuli seems to work! Have fun!";
+      log0(lvl, "trying to run testSetup.sikuli using SikuliScript");
+      try {
+        String testargs[] = new String[]{"-testSetup", "jython", "popup(\"" + testSetupSuccess + "\")"};
+        closeSplash(splash);
+        SikuliScript.main(testargs);
+        if (null == testargs[0]) {
+          throw new Exception("testSetup ran with problems");
+        }
+      } catch (Exception ex) {
+        closeSplash(splash);
+        log0(-1, ex.getMessage());
+        popError("Something serious happened! Sikuli not useable!\n"
+                + "Check the error log at " + logfile);
+        terminate("Functional test Jython did not work");
+      }
+    }
+    splash = showSplash("Setup seems to have ended successfully!", "Detailed information see: " + logfile);
+    start += 2000;
+
+    closeSplash(splash);
+
+    log1(lvl,
+            "... SikuliX Setup seems to have ended successfully ;-)");
+    //</editor-fold>
+
+    System.exit(
+            0);
   }
-
-
-
-
 
   public static boolean isRunningUpdate() {
     return runningUpdate;

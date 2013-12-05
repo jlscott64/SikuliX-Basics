@@ -137,6 +137,7 @@ public class Settings {
   public static double MinSimilarity = 0.7;
   public static boolean CheckLastSeen = true;
   public static float CheckLastSeenSimilar = 0.95f;
+  public static boolean UseImageFinder = false;
 
   public static double DelayBeforeDrop = 0.3;
   public static double DelayAfterDrag = 0.3;

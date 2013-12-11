@@ -333,4 +333,48 @@ public class SikuliX {
   public static boolean importPrefs(String path) {
     return true;
   }
+
+  public static String input(String msg, String preset, String title, boolean hidden) {
+    if (!hidden) {
+      if ("".equals(title)) {
+        title = "Sikuli input request";
+      }
+      return (String) JOptionPane.showInputDialog(null, msg, title, JOptionPane.PLAIN_MESSAGE, null, null, preset);
+    } else {
+      //TODO add hidden field
+      return "";
+    }
+  }
+
+  public static String input(String msg, String preset, boolean hidden) {
+    return input(msg, preset, "", hidden);
+  }
+
+  public static String input(String msg, boolean hidden) {
+    return input(msg, "", "", hidden);
+  }
+
+  public static String input(String msg) {
+    return input(msg, "", "", false);
+  }
+
+  public static String inputText(String msg, String preset, String title, int width, int lines) {
+    //TODO add textarea input
+    return "";
+  }
+
+  public static void popup(String message) {
+    popup(message, "Sikuli");
+  }
+
+  public static void popup(String message, String title) {
+    JOptionPane.showMessageDialog(null, message, title, JOptionPane.PLAIN_MESSAGE);
+  }
+
+  public static String run(String cmdline) {
+    IResourceLoader loader = FileManager.getNativeLoader("basic", new String[0]);
+    String[] args = new String[]{cmdline};
+    loader.doSomethingSpecial("runcmd", args);
+    return args[0];
+  }
 }

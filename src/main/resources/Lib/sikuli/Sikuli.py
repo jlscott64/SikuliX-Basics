@@ -24,6 +24,7 @@ from org.sikuli.basics import OS
 Debug.log(3, "Jython: sikuli: Sikuli: import Region")
 from org.sikuli.script import Region as JRegion
 from Region import *
+from org.sikuli.script import Observer
 
 Debug.log(3, "Jython: sikuli: Sikuli: import Screen")
 from org.sikuli.script import Screen as JScreen
@@ -42,17 +43,23 @@ Debug.log(3, "Jython: sikuli: Sikuli: import ScreenUnion")
 from org.sikuli.script import ScreenUnion
 Debug.log(3, "Jython: sikuli: Sikuli: import Finder")
 from org.sikuli.script import Finder
+from org.sikuli.script import ImageFinder
+from org.sikuli.script import ImageFind
+
 Debug.log(3, "Jython: sikuli: Sikuli: import Image")
 from org.sikuli.script import Image
+from org.sikuli.script import ImageGroup
+
 Debug.log(3, "Jython: sikuli: Sikuli: import ImagePath")
 from org.sikuli.script import ImagePath
 
 Debug.log(3, "Jython: sikuli: Sikuli: import App")
 from org.sikuli.script import App
-Debug.log(3, "Jython: sikuli: Sikuli: import Key")
+Debug.log(3, "Jython: sikuli: Sikuli: import KeyBoard/Mouse")
 from org.sikuli.script import Key
 from org.sikuli.script import KeyModifier
 from org.sikuli.script.KeyModifier import KEY_CTRL, KEY_SHIFT, KEY_META, KEY_CMD, KEY_WIN, KEY_ALT
+from org.sikuli.script import Mouse
 
 Debug.log(3, "Jython: sikuli: Sikuli: import from Basics")
 from org.sikuli.script import ImageLocator
@@ -67,7 +74,7 @@ from org.sikuli.script.compare import HorizontalComparator
 Debug.log(3, "Jython: sikuli: Sikuli: init SikuliImporter")
 import SikuliImporter
 
-Debug.log(3, "Jython: sikuli: Sikuli: import SikuliScript")
+Debug.log(3, "Jython: sikuli: Sikuli: import SikuliX")
 from org.sikuli.basics import SikuliScript
 from org.sikuli.script import SikuliX
 
@@ -88,7 +95,7 @@ def uprint(*args):
 # to make an utf8-encoded string from a str object
 #
 def unicd(s):
-    return (unicode(s, "utf8"))
+    return ucode(s)
 
 def ucode(s):
     return (unicode(s, "utf8"))
@@ -118,24 +125,33 @@ def load(jar):
         return True
     return False
 
-def addModPath(path):
-    if path[-1] == Settings.getFilePathSeperator():
-        path = path[:-1]
-    if not path in sys.path:
-        sys.path.append(path)
-        
+##
+# append the given path sys.path if not yet contained
+#
 def addImportPath(path):
     addModPath(path)
 
+##
+# append the given path image path list if not yet contained
+#
 def addImagePath(path):
     ImagePath.addImagePath(path)
 
+##
+# return the current image path list
+#
 def getImagePath():
     return [e for e in ImagePath.getImagePath() if e]
 
+##
+# remove the given path from the image path
+#
 def removeImagePath(path):
     ImagePath.removeImagePath(path)
    
+##
+# reset the image path, so it only contains the bundlepath
+#
 def resetImagePath(path):
     ImagePath.resetImagePath(path)
 
@@ -148,15 +164,31 @@ def resetImagePath(path):
 def setBundlePath(path):
     ImagePath.setBundlePath(path)
 
+##
+# return the current bundlepath (usually the folder .sikuli) or None if no bundlepath is defined
+#
 def getBundlePath():
     return ImagePath.getBundlePath()
   
+##
+# return the parent folder of the current bundlepath 
+# (usually the folder containing the current script folder.sikuli) 
+# or None if no bundlepath is defined
+#
 def getParentPath():
     return ImagePath.getBundleParentPath();
   
+##
+# make a valid path by joining the two paths (path2 might be a list)
+#
 def makePath(path1, path2):
-# TODO path2 as list
-    pass 
+  if (not isinstance(path2, List)):
+      path = os.path.join(path1, path2)
+  else:
+      path = path1
+      for p in path2:
+          path = os.path.join(path, p)
+  return path
 
 ##
 # Sikuli shows actions (click, dragDrop, ... etc.) if this flag is set to <i>True</i>.
@@ -166,13 +198,24 @@ def setShowActions(flag):
     Settings.setShowActions(flag)
 
 ##
+# Shows a message dialog containing the given message.
+# @param msg The given message string.
+def popup(msg, title="Sikuli"):
+    SikuliX.popup(msg, title)
+
+##
 # Shows a question-message dialog requesting input from the user.
 # @param msg The message to display.
-# @param default The preset text of the input field.
+# @param default The preset text of the input field (default empty).
+# @param title the title for the dialog (default 
+# @param 
 # @return The user's input string.
 #
-def input(msg="", default=""):
-    return SikuliScript.input(msg, default)
+def input(msg="", default="", title="", hidden=False):
+    return SikuliX.input(msg, default, title, hidden)
+
+def inputText(msg="", title="", width=8, lines=5):
+    return SikuliX.input(msg, title, width, lines)
 
 def capture(*args):
     scr = ScreenUnion()
@@ -234,9 +277,8 @@ def use(scr = None, remote = False):
   return SCREEN
 
 ##
-# set the default screen to given or primary screen
+# set the default screen to given remote screen
 #
-
 def useRemote(adr, port = 0):
   global remoteScreen
   import org.sikuli.script.ScreenRemote as SR
@@ -278,11 +320,8 @@ def sleep(sec):
     time.sleep(sec)
 
 ##
-# Shows a message dialog containing the given message.
-# @param msg The given message string.
-def popup(msg, title="Sikuli"):
-    SikuliScript.popup(msg, title)
-
+# shutdown and return given exit code
+#
 def exit(code=0):
     global remoteScreen
     if remoteScreen:
@@ -296,24 +335,28 @@ def exit(code=0):
 # @param msg The given string command.
 # @return Returns the output from the executed command.
 def run(cmd):
-    return SikuliScript.run(cmd)
+    return SikuliX.run(cmd)
     
 ##
 # display some help in interactive mode
 def shelp():
-    SikuliScript.shelp()
+    SikuliX.shelp()
     
-def byDistanceTo(m):
-    """ Method to compare two Region objects by distance to m. This method is deprecated and should not be used. Use distanceComparator() instead """
-    return DistanceComparator(m)
+##
+# helper functions, that can be used when sorting lists of regions
+#
+def byDistanceTo(x, y=None):
+    """ Method to compare two Region objects by distance of their top left. 
+    or a regions top left to the given point by coordinates"""
+    return DistanceComparator(x, y)
 
 def byX(m):
-    """ Method to compare two Region objects by x value. This method is deprecated and should not be used. Use horizontalComparator() instead """
-    return m.x
+    """ Method to compare two Region objects by x value. """
+    return HorizontalComparator().compare
 
 def byY(m):
-    """ Method to compare two Region objects by y value. This method is deprecated and should not be used. Use verticalComparator() instead """
-    return m.y
+    """ Method to compare two Region objects by y value. """
+    return VerticalComparator().compare
 
 def verticalComparator():
     """ Method to compare two Region objects by y value. """
@@ -324,10 +367,20 @@ def horizontalComparator():
     return HorizontalComparator().compare
 
 def distanceComparator(x, y=None):
-    """ Method to compare two Region objects by distance to a specific point. """
+    """ Method to compare two Region objects by distance of their top left. 
+    or a regions top left to the given point by coordinates"""
     if y is None:
         return DistanceComparator(x).compare # x is Region or Location
     return DistanceComparator(x, y).compare # x/y as coordinates
+
+##
+################## internal use only ###########################################
+#
+def addModPath(path):
+    if path[-1] == Settings.getFilePathSeperator():
+        path = path[:-1]
+    if not path in sys.path:
+        sys.path.append(path)
 
 def _exposeAllMethods(anyObject, saved, theGlobals, exclude_list):
     if not exclude_list:

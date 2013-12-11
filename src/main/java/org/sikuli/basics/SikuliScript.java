@@ -7,7 +7,7 @@
 package org.sikuli.basics;
 
 import java.io.File;
-import javax.swing.JOptionPane;
+import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 
 /**
@@ -166,7 +166,7 @@ public class SikuliScript {
       givenScriptName = cmdLine.getOptionValue(CommandArgsEnum.RUN.longname());
     } else if (cmdLine.hasOption(CommandArgsEnum.TEST.shortname())) {
       givenScriptName = cmdLine.getOptionValue(CommandArgsEnum.TEST.longname());
-      Debug.error("Command line option -t: not yet supported!", args);
+      Debug.error("Command line option -t: not yet supported! %s", Arrays.asList(args).toString());
       runAsTest = true;
     }
     
@@ -205,28 +205,45 @@ public class SikuliScript {
     }
   }
 
-  public static void popup(String message, String title) {
-    JOptionPane.showMessageDialog(null, message,
-            title, JOptionPane.PLAIN_MESSAGE);
-  }
-
+  @Deprecated
   public static void popup(String message) {
-    popup(message, "Sikuli");
+    SikuliX.popup(message);
   }
 
+  @Deprecated
+  public static void popup(String message, String title) {
+    SikuliX.popup( message,
+            title);
+  }
+
+  @Deprecated
   public static String input(String msg) {
-    return JOptionPane.showInputDialog(msg);
+    return SikuliX.input(msg);
   }
 
-  public static String input(String msg, String preset) {
-    return JOptionPane.showInputDialog(msg, preset);
+  @Deprecated
+  public static String input(String msg, boolean hidden) {
+    return SikuliX.input(msg, hidden);
   }
 
+  @Deprecated
+  public static String input(String msg, String preset, boolean hidden) {
+    return SikuliX.input(msg, preset, hidden);
+  }
+
+  @Deprecated
+  public static String input(String msg, String preset, String title, boolean hidden) {
+    return SikuliX.input(msg, preset, title, hidden);
+  }
+  
+  @Deprecated
+  public static String inputText(String msg, String preset, String title, int width, int lines) {
+    return SikuliX.inputText(msg, preset, title, width, lines);
+  }
+
+  @Deprecated
   public static String run(String cmdline) {
-    IResourceLoader loader = FileManager.getNativeLoader("basic", new String[0]);
-    String[] args = new String[] {cmdline};
-    loader.doSomethingSpecial("runcmd", args);
-    return args[0];    
+    return SikuliX.run(cmdline);    
   }
 
   /**

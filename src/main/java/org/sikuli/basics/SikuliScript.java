@@ -220,25 +220,15 @@ public class SikuliScript {
   public static String input(String msg) {
     return SikuliX.input(msg);
   }
-
+  
   @Deprecated
-  public static String input(String msg, boolean hidden) {
-    return SikuliX.input(msg, hidden);
-  }
-
-  @Deprecated
-  public static String input(String msg, String preset, boolean hidden) {
-    return SikuliX.input(msg, preset, hidden);
-  }
-
-  @Deprecated
-  public static String input(String msg, String preset, String title, boolean hidden) {
-    return SikuliX.input(msg, preset, title, hidden);
+  public static String input(String msg, String preset) {
+    return SikuliX.input(msg, preset);
   }
   
   @Deprecated
   public static String inputText(String msg, String preset, String title, int width, int lines) {
-    return SikuliX.inputText(msg, preset, title, width, lines);
+    return SikuliX.inputText(msg, title, width, lines);
   }
 
   @Deprecated

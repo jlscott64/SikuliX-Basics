@@ -6,6 +6,7 @@
  */
 package org.sikuli.basics;
 
+import java.awt.Dimension;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -18,8 +19,15 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 
 /**
  *
@@ -334,6 +342,17 @@ public class SikuliX {
     return true;
   }
 
+  /**
+   * request user's input as one line of text <br />
+   * with hidden = true: <br /> 
+   * the dialog works as password input (input text hidden a s bullets) <br />
+   * take care to destroy the return value as soon as possible (internally security is granted)
+   * @param msg
+   * @param preset
+   * @param title
+   * @param hidden
+   * @return
+   */
   public static String input(String msg, String preset, String title, boolean hidden) {
     if (!hidden) {
       if ("".equals(title)) {
@@ -341,28 +360,102 @@ public class SikuliX {
       }
       return (String) JOptionPane.showInputDialog(null, msg, title, JOptionPane.PLAIN_MESSAGE, null, null, preset);
     } else {
-      //TODO add hidden field
-      return "";
+      preset = "";
+      JTextArea tm = new JTextArea(msg);
+      tm.setColumns(20);
+      tm.setLineWrap(true);
+      tm.setWrapStyleWord(true);
+      tm.setEditable(false);
+      tm.setBackground(new JLabel().getBackground());
+      
+      JPasswordField pw = new JPasswordField(preset);
+      
+      JPanel pnl = new JPanel();
+      pnl.setLayout(new BoxLayout(pnl, BoxLayout.Y_AXIS));
+      pnl.add(pw);
+      pnl.add(Box.createVerticalStrut(10));
+      pnl.add(tm);
+
+      if (0 == JOptionPane.showConfirmDialog(null, pnl, title, JOptionPane.OK_CANCEL_OPTION)) {
+        char[] pwc = pw.getPassword();
+        String pwr = "";
+        for (int i = 0; i < pwc.length; i++) {
+          pwr = pwr + pwc[i];
+          pwc[i] = 0;
+        }
+        return pwr;
+      } else {
+        return "";
+      }
     }
   }
 
-  public static String input(String msg, String preset, boolean hidden) {
-    return input(msg, preset, "", hidden);
+  public static String input(String msg, String title, boolean hidden) {
+    return input(msg, "", title, hidden);
   }
 
   public static String input(String msg, boolean hidden) {
     return input(msg, "", "", hidden);
   }
 
+  public static String input(String msg, String preset, String title) {
+    return input(msg, preset, title, false);
+  }
+
+  public static String input(String msg, String preset) {
+    return input(msg, preset, "", false);
+  }
+
   public static String input(String msg) {
     return input(msg, "", "", false);
   }
 
-  public static String inputText(String msg, String preset, String title, int width, int lines) {
-    //TODO add textarea input
-    return "";
+  /**
+  * Shows a dialog request to enter text in a multiline text field <br />
+  * Though not all text might be visible, everything entered is delivered with the returned text <br />
+  * The main purpose for this feature is to allow pasting text from somewhere preserving line breaks <br /> 
+  * @param msg the message to display.
+  * @param title the title for the dialog (default: Sikuli input request)
+  * @param lines the maximum number of lines visible in the text field (default 9)
+  * @param width the maximum number of characters visible in one line (default 20)
+  * @return The user's input including the line breaks.
+  */
+  public static String inputText(String msg, String title, int lines, int width) {
+    width = Math.max(20, width);
+    lines = Math.max(9, lines);    
+    if ("".equals(title)) {
+      title = "Sikuli input request";
+    }
+    JTextArea ta = new JTextArea("");
+    int w = width*ta.getFontMetrics(ta.getFont()).charWidth('m');
+    int h = (int) (lines*ta.getFontMetrics(ta.getFont()).getHeight());
+    ta.setPreferredSize(new Dimension(w,h));
+    ta.setMaximumSize(new Dimension(w,2*h));
+    
+    JScrollPane sp = new JScrollPane(ta);
+    sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+    
+    JTextArea tm = new JTextArea(msg);
+    tm.setColumns(width);
+    tm.setLineWrap(true);
+    tm.setWrapStyleWord(true);
+    tm.setEditable(false);
+    tm.setBackground(new JLabel().getBackground());
+    
+    JPanel pnl = new JPanel();
+    pnl.setLayout(new BoxLayout(pnl, BoxLayout.Y_AXIS));
+    pnl.add(sp);
+    pnl.add(Box.createVerticalStrut(10));
+    pnl.add(tm);
+    pnl.add(Box.createVerticalStrut(10));
+    
+    if (0 == JOptionPane.showConfirmDialog(null, pnl, title, JOptionPane.OK_CANCEL_OPTION)) {
+      return ta.getText();
+    } else {
+      return "";
+    }
   }
-
+  
   public static void popup(String message) {
     popup(message, "Sikuli");
   }

@@ -207,14 +207,24 @@ def popup(msg, title="Sikuli"):
 # Shows a question-message dialog requesting input from the user.
 # @param msg The message to display.
 # @param default The preset text of the input field (default empty).
-# @param title the title for the dialog (default 
-# @param 
+# @param title the title for the dialog (default: Sikuli input request)
+# @param hidden =true makes the dialog run as a password input (input hidden with bullets)
 # @return The user's input string.
 #
 def input(msg="", default="", title="", hidden=False):
+    if (hidden):
+      default = ""
     return SikuliX.input(msg, default, title, hidden)
-
-def inputText(msg="", title="", width=8, lines=5):
+##
+# Shows a dialog request to enter text in a multiline text field
+# Though not all text might be visible, everything entered is delivered with the returned text
+# The main purpose for this feature is to allow pasting text from somewhere 
+# @param msg the message to display.
+# @param title the title for the dialog (default: Sikuli input request)
+# @param lines the maximum number of lines visible in the text field (default 9)
+# @param width the maximum number of characters visible in one line (default 20)
+# @return The user's input including the line breaks.
+def inputText(msg="", title="", lines=0, width=0):
     return SikuliX.input(msg, title, width, lines)
 
 def capture(*args):

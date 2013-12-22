@@ -1,9 +1,9 @@
 Sikuli Basics 1.1.0 developement
 =============
 
-Supporting stuff for SikuliX <br />
+**DO NOT USE ANY LONGER ------------------------- 2013 December 22nd**
 
-It is contained in all downloadable packages and is **not intended for any usages outside these packages**.
+**This branch is now contained in the new repo SiluliX-2014**
 
-Forking only makes sense, if you want to contribute features or patches.
-<br /><br />Use *mvn install* in the project folder to get it in your local repo to use it as the needed dependency when producing the packages like sikuli-ide.jar, sikuli-script.jar or sikuli-java.jar.
+**Only here for hitorical reasons to see the commits**
+

@@ -6,3 +6,4 @@ target/
 nb-*.xml
 
 *.png
+/target-setup/

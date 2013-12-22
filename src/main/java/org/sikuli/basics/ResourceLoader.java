@@ -135,18 +135,7 @@ public class ResourceLoader implements IResourceLoader {
     //Debug.log(lvl, "%s: %s: init", me, loaderName);
   }
 
-  private static String isFatJar() {
-    boolean extractingFromJar = false;
-    String jarPath = null;
-    URL jarURL = null;
-    CodeSource codeSrc = RunNatives.class.getProtectionDomain().getCodeSource();
-    if (codeSrc != null && codeSrc.getLocation() != null) {
-      jarURL = codeSrc.getLocation();
-      jarPath = jarURL.getPath();
-      if (jarPath.endsWith(".jar")) {
-        extractingFromJar = true;
-      }
-    }
+  private boolean isFatJar() {
     if (extractingFromJar) {
       try {
         ZipInputStream zip = new ZipInputStream(jarURL.openStream());
@@ -154,16 +143,14 @@ public class ResourceLoader implements IResourceLoader {
         while ((ze = zip.getNextEntry()) != null) {
           String entryName = ze.getName();
           if (entryName.startsWith(Settings.libSourcebase)) {
-            return null;
+            return true;
           }
         }
       } catch (IOException e) {
-        return jarPath;
+        return false;
       }
-    } else {
-      return null;
     }
-    return jarPath;
+    return false;
   }
 
   /**
@@ -171,9 +158,15 @@ public class ResourceLoader implements IResourceLoader {
    */
   @Override
   public void check(String what) {
-    if (System.getProperty("sikuli.DoNotExport") == null && null != isFatJar()) {
-      RunSetup.popError("Terminating: The jar in use was not built with setup!\n" + jarPath);
-      System.exit(1);
+    if (System.getProperty("sikuli.DoNotExport") == null && !isFatJar()) {
+      if (!jarPath.contains("Natives") && !Settings.isMac()) {
+        RunSetup.popError("Terminating: The jar in use was not built with setup!\n" + jarPath);
+        System.exit(1);
+      } else {
+        jarPath = jarPath.replace("Natives", "Libs");
+        log(-1, "The jar in use was not built with setup!\nRunning in Netbeans? trying:\n" + jarPath);
+//        System.exit(1);
+      }
     }
 
     mem = "check";
@@ -337,15 +330,15 @@ public class ResourceLoader implements IResourceLoader {
       log(-2, "Please wait! Trying to extract libs to: " + libPath);
       if (!FileManager.deleteFileOrFolder(libPath,
               new FileManager.fileFilter() {
-                @Override
-                public boolean accept(File entry) {
-                  if (entry.getPath().contains("tessdata")
+        @Override
+        public boolean accept(File entry) {
+          if (entry.getPath().contains("tessdata")
                   || entry.getPath().contains("Lib")) {
-                    return false;
-                  }
-                  return true;
-                }
-              })) {
+            return false;
+          }
+          return true;
+        }
+      })) {
         log(-1, "Fatal Error 102: not possible to empty libs dir");
         RunSetup.popError("Problem with SikuliX libs folder - see error log");
         SikuliX.terminate(102);
@@ -365,7 +358,7 @@ public class ResourceLoader implements IResourceLoader {
       if (libPath == null && jarParentPath != null) {
         if (jarPath.endsWith(".jar")
                 && // hack to avoid libs dir in Maven local repo
-                !jarPath.contains("SikuliX-Natives")) {
+                !jarPath.contains("SikuliX-Libs")) {
           log(-2, "Please wait! Trying to extract libs to jar parent folder: " + jarParentPath);
           File jarPathLibs = extractLibs((new File(jarParentPath)).getAbsolutePath(), libSource);
           if (jarPathLibs == null) {
@@ -374,7 +367,6 @@ public class ResourceLoader implements IResourceLoader {
             libPath = jarPathLibs.getAbsolutePath();
           }
         } else {
-          
         }
       }
       if (libPath == null && userSikuli != null) {
@@ -960,8 +952,7 @@ public class ResourceLoader implements IResourceLoader {
   }
 
   /**
-   * Extract files from a jar using a list of files in a file (def.
-   * filelist.txt)
+   * Extract files from a jar using a list of files in a file (def. filelist.txt)
    *
    * @param srcPath from here
    * @param localPath to there (if null, create a default in temp folder)

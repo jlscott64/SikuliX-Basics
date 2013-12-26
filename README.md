@@ -5,5 +5,5 @@ Sikuli Basics 1.1.0 developement
 
 **This branch is now contained in the new repo SiluliX-2014**
 
-**Only here for hitorical reasons to see the commits**
+**Only here for historical reasons to see the commits**
 
